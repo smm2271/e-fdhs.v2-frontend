@@ -1,0 +1,161 @@
+.login-page {
+    min-height: 100vh;
+    width: 100vw;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+    box-sizing: border-box;
+    background: #fff;
+    color: #000;
+    font-family: sans-serif;
+}
+
+.login-card {
+    display: grid;
+    grid-template-columns: 320px 380px;
+    width: 100%;
+    max-width: 700px;
+    min-height: 480px;
+    border: 1px solid #000;
+    box-sizing: border-box;
+}
+
+.login-branding {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 2rem;
+    border-right: 1px solid #000;
+    box-sizing: border-box;
+
+    .branding-overlay {
+        display: none;
+    }
+
+    .login-branding-content {
+        &::before {
+            content: '';
+            display: block;
+            width: 48px;
+            height: 48px;
+            border: 1px solid #000;
+            margin-bottom: 1.25rem;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin: 0;
+
+            &::after {
+                content: '數位校園平台';
+                display: block;
+                font-size: 0.875rem;
+                font-weight: normal;
+                margin-top: 0.25rem;
+            }
+        }
+    }
+}
+
+.login-form {
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    box-sizing: border-box;
+}
+
+.login-form-header {
+    text-align: center;
+    margin-bottom: 1.5rem;
+
+    h2 {
+        font-size: 1.5rem;
+        font-weight: bold;
+        margin: 0 0 0.5rem;
+    }
+
+    p {
+        font-size: 0.875rem;
+        margin: 0;
+    }
+}
+
+.role-switch {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1.25rem;
+
+    button {
+        flex: 1;
+        padding: 0.5rem;
+        border: 1px solid #000;
+        background: transparent;
+        color: #000;
+        font-size: 0.875rem;
+        cursor: pointer;
+    }
+}
+
+.login-form:has(#position) .role-switch button:first-child,
+.login-form:not(:has(#position)) .role-switch button:last-child {
+    background: #000;
+    color: #fff;
+    font-weight: bold;
+}
+
+.login-form-body {
+    display: flex;
+    flex-direction: column;
+
+    label {
+        font-size: 0.875rem;
+        font-weight: bold;
+        margin-top: 0.75rem;
+        margin-bottom: 0.25rem;
+
+        &:first-of-type {
+            margin-top: 0;
+        }
+    }
+
+    input,
+    select {
+        width: 100%;
+        height: 40px;
+        border: 1px solid #000;
+        background: transparent;
+        padding: 0 0.75rem;
+        font-size: 0.875rem;
+        color: #000;
+        box-sizing: border-box;
+        outline: none;
+    }
+
+    button[type='button'] {
+        width: 100%;
+        height: 40px;
+        margin-top: 1.25rem;
+        border: 1px solid #000;
+        background: #000;
+        color: #fff;
+        font-size: 0.875rem;
+        font-weight: bold;
+        cursor: pointer;
+    }
+}
+
+@media (max-width: 768px) {
+    .login-card {
+        grid-template-columns: 1fr;
+        max-width: 380px;
+    }
+
+    .login-branding {
+        border-right: none;
+        border-bottom: 1px solid #000;
+        min-height: 140px;
+    }
+}

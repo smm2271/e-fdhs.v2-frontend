@@ -1,1 +1,40 @@
-<p>login works!</p>
+<div class="login-page">
+
+    <div class="login-card">
+        <div class="login-branding">
+            <img src="" alt="" class="branding-overlay">
+            <div class="login-branding-content">
+                <h1>數位校園</h1>
+            </div>
+        </div>
+        <div class="login-form">
+            <div class="login-form-header">
+                <h2>歡迎登入</h2>
+                <p>請選擇您的身分</p>
+            </div>
+            <div class="role-switch">
+                <button type="button" (click)="setRole('student')">學生</button>
+                <button type="button" (click)="setRole('teacher')">教師</button>
+            </div>
+            <div class="login-form-body">
+                <label for="username">帳號</label>
+                <input type="text" id="username" name="username">
+
+                @if (role() === 'student') {
+                <label for="position">職務</label>
+                <select name="position" id="position">
+                    <option value="" selected disabled>請選擇</option>
+                    <option value="一般學生">一般學生</option>
+                    <option value="資訊股長">資訊股長</option>
+                    <option value="班代表">班代表</option>
+                </select>
+                }
+
+                <label for="password">密碼</label>
+                <input type="password" id="password" name="password">
+
+                <button type="button">登入</button>
+            </div>
+        </div>
+    </div>
+</div>

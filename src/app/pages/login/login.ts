@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, signal } from '@angular/core';
 
 @Component({
   imports: [],
@@ -6,4 +6,11 @@ import { Component } from '@angular/core';
   styleUrl: './login.scss',
   templateUrl: './login.html',
 })
-export class Login {}
+export class Login {
+  protected role = signal<'teacher' | 'student'>('student');
+
+  protected setRole(role: 'teacher' | 'student'): void {
+    this.role.set(role);
+  }
+
+}
