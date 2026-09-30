@@ -1,40 +1,49 @@
-<div class="login-page">
-
+<main class="login-page">
+  @if (welcomeName(); as name) {
+    <section class="welcome-card" aria-live="polite">
+      <h1>歡迎，{{ name }}</h1>
+    </section>
+  } @else {
     <div class="login-card">
-        <div class="login-branding">
-            <img src="" alt="" class="branding-overlay">
-            <div class="login-branding-content">
-                <h1>數位校園</h1>
-            </div>
+      <section class="login-branding">
+        <div class="login-branding-content">
+          <h1>校務系統</h1>
         </div>
-        <div class="login-form">
-            <div class="login-form-header">
-                <h2>歡迎登入</h2>
-                <p>請選擇您的身分</p>
-            </div>
-            <div class="role-switch">
-                <button type="button" (click)="setRole('student')">學生</button>
-                <button type="button" (click)="setRole('teacher')">教師</button>
-            </div>
-            <div class="login-form-body">
-                <label for="username">帳號</label>
-                <input type="text" id="username" name="username">
-
-                @if (role() === 'student') {
-                <label for="position">職務</label>
-                <select name="position" id="position">
-                    <option value="" selected disabled>請選擇</option>
-                    <option value="一般學生">一般學生</option>
-                    <option value="資訊股長">資訊股長</option>
-                    <option value="班代表">班代表</option>
-                </select>
-                }
-
-                <label for="password">密碼</label>
-                <input type="password" id="password" name="password">
-
-                <button type="button">登入</button>
-            </div>
+      </section>
+      <form class="login-form" (ngSubmit)="login()">
+        <header class="login-form-header">
+          <h2>帳號登入</h2>
+          <p>請輸入您的帳號與密碼</p>
+        </header>
+        <div class="role-switch" aria-label="帳號身分">
+          <button type="button" [class.active]="role() === 'student'" (click)="setRole('student')">學生</button>
+          <button type="button" [class.active]="role() === 'teacher'" (click)="setRole('teacher')">教師</button>
         </div>
+        <div class="login-form-body">
+          <label for="username">帳號</label>
+          <input type="text" id="username" name="username" [(ngModel)]="account" autocomplete="username" required>
+
+          @if (role() === 'student') {
+            <label for="position">職務</label>
+            <select id="position" name="position" [(ngModel)]="positionName">
+              <option value="">請選擇</option>
+              <option value="一般學生">一般學生</option>
+              <option value="資訊股長">資訊股長</option>
+              <option value="班代表">班代表</option>
+            </select>
+          }
+
+          <label for="password">密碼</label>
+          <input type="password" id="password" name="password" [(ngModel)]="password" autocomplete="current-password" required>
+
+          @if (errorMessage()) {
+            <p class="login-error" role="alert">{{ errorMessage() }}</p>
+          }
+          <button type="submit" [disabled]="isSubmitting()">
+            {{ isSubmitting() ? '登入中…' : '登入' }}
+          </button>
+        </div>
+      </form>
     </div>
-</div>
+  }
+</main>

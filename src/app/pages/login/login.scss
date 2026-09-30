@@ -99,8 +99,7 @@
     }
 }
 
-.login-form:has(#position) .role-switch button:first-child,
-.login-form:not(:has(#position)) .role-switch button:last-child {
+.role-switch button.active {
     background: #000;
     color: #fff;
     font-weight: bold;
@@ -144,6 +143,34 @@
         font-size: 0.875rem;
         font-weight: bold;
         cursor: pointer;
+
+        &:disabled {
+            cursor: wait;
+            opacity: 0.65;
+        }
+    }
+}
+
+.login-error {
+    margin-top: 1rem;
+    color: #a40000;
+    font-size: 0.875rem;
+    line-height: 1.3;
+}
+
+.welcome-card {
+    width: min(100%, 700px);
+    min-height: 180px;
+    display: grid;
+    place-items: center;
+    border: 1px solid #000;
+    padding: 2rem;
+    box-sizing: border-box;
+
+    h1 {
+        font-size: clamp(1.75rem, 5vw, 2.5rem);
+        font-weight: bold;
+        text-align: center;
     }
 }
 
