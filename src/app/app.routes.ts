@@ -2,8 +2,12 @@ import { Routes } from '@angular/router';
 import { Login } from './pages/login/login';
 
 export const routes: Routes = [
-    {
-        path: '',
-        component: Login
-    }
+  {
+    path: 'broadcasts',
+    loadComponent: () => import('./pages/broadcast/broadcast').then((m) => m.BroadcastFeed),
+  },
+  {
+    path: '',
+    component: Login,
+  },
 ];

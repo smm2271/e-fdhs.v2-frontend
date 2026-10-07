@@ -1,5 +1,24 @@
 # Frontend
 
+## Broadcast Feed mock preview
+
+Open `/broadcasts` after starting the development server. The default mock user is 資訊股長;
+use the Mock 身分 selector to preview 班代表 or read-only 一般學生 permissions.
+
+- `src/app/services/broadcast/broadcast.mock.ts` contains all sample data and users.
+  The scenario clock is fixed at 2026/10/07 15:00 (Asia/Taipei).
+- `broadcast.store.ts` owns weekly filtering, grouping, confirmation, replies and the navigation
+  badge. Future API integration belongs at this boundary; currently all mutations are in memory
+  and reset on reload. `BROADCAST_CLOCK` can be replaced independently.
+- `src/app/pages/broadcast/` contains the feed and recursive inline reply renderer.
+  One table becomes cards through CSS at widths of 768px and below.
+- No Broadcast API, backend changes, authentication integration or extra dependencies are included.
+  The existing login route remains at `/`; the student navigation is introduced on the feed
+  because this project does not yet have a shared student layout.
+
+Validation: `npm test -- --watch=false` and `npm run build`. This project has no lint script
+or lint target. On Windows with script execution disabled, use `npm.cmd` / `npx.cmd`.
+
 This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 22.0.5.
 
 ## Development server

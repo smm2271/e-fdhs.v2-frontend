@@ -1,0 +1,153 @@
+<div class="broadcast-shell">
+  <header class="site-header">
+    <a class="brand" routerLink="/">校園系統</a>
+    <nav aria-label="學生導覽">
+      <a routerLink="/broadcasts" aria-current="page" class="nav-link"
+        >查看廣播
+        @if (store.pendingCount()) {
+          <span class="badge" [attr.aria-label]="store.pendingCount() + ' 則本週廣播待確認'">{{
+            store.pendingCount()
+          }}</span>
+        }
+      </a>
+    </nav>
+  </header>
+  <main>
+    <header class="feed-header">
+      <div>
+        <p class="eyebrow">校園文字廣播</p>
+        <h1>本週廣播</h1>
+        <p class="subtitle">閱讀老師的最新通知，掌握本週校園消息。</p>
+      </div>
+      <div class="mock-controls">
+        <label for="mock-user">Mock 身分</label>
+        <select
+          id="mock-user"
+          [ngModel]="store.currentUser().id"
+          (ngModelChange)="store.setUser($event)"
+        >
+          @for (user of store.users; track user.id) {
+            <option [value]="user.id">{{ user.role }}</option>
+          }
+        </select>
+        <small>示範時間：{{ store.now() | date: 'MM/dd HH:mm' : '+0800' }} · 資料僅暫存</small>
+      </div>
+    </header>
+    <p class="week-summary">
+      {{ store.weekLabel() }} <span>共 {{ store.weeklyBroadcasts().length }} 則廣播</span>
+    </p>
+    <p class="sr-only" role="status">{{ notice() }}</p>
+    <table class="feed-table" aria-label="本週校園文字廣播">
+      <colgroup>
+        <col class="sender-col" />
+        <col class="time-col" />
+        <col />
+        <col class="status-col" />
+        <col class="reply-col" />
+      </colgroup>
+      <thead>
+        <tr>
+          <th scope="col">發送者</th>
+          <th scope="col">發送時間</th>
+          <th scope="col">廣播內容</th>
+          <th scope="col">確認狀態</th>
+          <th scope="col">回覆</th>
+        </tr>
+      </thead>
+      @for (group of store.groups(); track group.date) {
+        <tbody>
+          <tr class="date-row">
+            <th colspan="5" scope="rowgroup">
+              <span>{{ group.label }}</span>
+            </th>
+          </tr>
+          @for (broadcast of group.broadcasts; track broadcast.id) {
+            <tr class="broadcast-row" [class.is-expanded]="expanded().has(broadcast.id)">
+              <td class="sender">{{ broadcast.senderName }}</td>
+              <td class="sent-time">
+                <time [attr.datetime]="broadcast.sentAt">{{
+                  broadcast.sentAt | date: 'HH:mm' : '+0800'
+                }}</time>
+              </td>
+              <td class="content">{{ broadcast.content }}</td>
+              <td class="confirmation">
+                @if (broadcast.confirmation; as confirmation) {
+                  <span class="status" [class.overdue]="store.isOverdue(broadcast)">{{
+                    store.isOverdue(broadcast) ? '! 逾期確認' : '✓ 已確認'
+                  }}</span>
+                  <small [attr.title]="confirmation.confirmedBy">{{ confirmation.role }}</small>
+                } @else if (store.currentUser().canConfirm) {
+                  <button class="confirm-button" type="button" (click)="confirm(broadcast.id)">
+                    {{ store.isOverdue(broadcast) ? '補確認' : '確認廣播' }}
+                  </button>
+                  @if (store.isOverdue(broadcast)) {
+                    <small class="overdue">逾期未確認</small>
+                  }
+                } @else {
+                  <span class="status" [class.overdue]="store.isOverdue(broadcast)">{{
+                    store.isOverdue(broadcast) ? '! 逾期未確認' : '未確認'
+                  }}</span>
+                }
+              </td>
+              <td class="reply-entry">
+                <button
+                  type="button"
+                  class="reply-toggle"
+                  [attr.aria-label]="
+                    broadcast.senderName +
+                    ' ' +
+                    (broadcast.sentAt | date: 'MM/dd HH:mm' : '+0800') +
+                    ' 的廣播，回覆 ' +
+                    store.replyCount(broadcast.replies)
+                  "
+                  [attr.aria-expanded]="expanded().has(broadcast.id)"
+                  [attr.aria-controls]="'replies-' + broadcast.id"
+                  (click)="toggle(broadcast.id)"
+                >
+                  回覆 {{ store.replyCount(broadcast.replies) }}
+                  <span aria-hidden="true">{{ expanded().has(broadcast.id) ? '↑' : '↓' }}</span>
+                </button>
+              </td>
+            </tr>
+            <tr class="reply-row" [hidden]="!expanded().has(broadcast.id)">
+              <td colspan="5">
+                <section
+                  [id]="'replies-' + broadcast.id"
+                  [attr.aria-label]="broadcast.senderName + '的廣播回覆'"
+                >
+                  <h2>回覆 · {{ store.replyCount(broadcast.replies) }}</h2>
+                  @if (broadcast.replies.length) {
+                    <app-reply-tree [replies]="broadcast.replies" />
+                  } @else {
+                    <p class="empty-replies">尚無回覆</p>
+                  }
+                  @if (store.currentUser().canReply) {
+                    <form (ngSubmit)="submitReply(broadcast.id)" class="reply-form">
+                      <label [for]="'draft-' + broadcast.id">新增回覆</label>
+                      <textarea
+                        [id]="'draft-' + broadcast.id"
+                        name="reply"
+                        [(ngModel)]="drafts[broadcast.id]"
+                        rows="2"
+                        placeholder="輸入回覆……"
+                      ></textarea>
+                      <button type="submit" [disabled]="!(drafts[broadcast.id] || '').trim()">
+                        送出回覆
+                      </button>
+                    </form>
+                  }
+                </section>
+              </td>
+            </tr>
+          }
+        </tbody>
+      } @empty {
+        <tbody>
+          <tr>
+            <td colspan="5" class="empty-replies">本週尚無廣播</td>
+          </tr>
+        </tbody>
+      }
+    </table>
+  </main>
+</div>
