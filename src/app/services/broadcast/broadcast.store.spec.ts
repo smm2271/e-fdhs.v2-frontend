@@ -1,9 +1,10 @@
 import { TestBed } from '@angular/core/testing';
-import { BROADCAST_CLOCK, BroadcastStore } from './broadcast.store';
+import { BROADCAST_MOCK, BROADCAST_CLOCK, BroadcastStore } from './broadcast.store';
 
 describe('BroadcastStore', () => {
   let store: BroadcastStore;
   beforeEach(() => {
+    TestBed.configureTestingModule({ providers: [{ provide: BROADCAST_MOCK, useValue: true }] });
     store = TestBed.inject(BroadcastStore);
   });
 
@@ -63,6 +64,7 @@ describe('Broadcast week boundaries (Taipei)', () => {
   it('keeps the same week through Sunday night in Taipei', () => {
     TestBed.configureTestingModule({
       providers: [
+        { provide: BROADCAST_MOCK, useValue: true },
         { provide: BROADCAST_CLOCK, useValue: () => new Date('2026-10-11T23:59:59+08:00') },
       ],
     });
@@ -73,6 +75,7 @@ describe('Broadcast week boundaries (Taipei)', () => {
   it('does not keep the badge lit for last week at the new week boundary', () => {
     TestBed.configureTestingModule({
       providers: [
+        { provide: BROADCAST_MOCK, useValue: true },
         { provide: BROADCAST_CLOCK, useValue: () => new Date('2026-10-12T00:00:00+08:00') },
       ],
     });

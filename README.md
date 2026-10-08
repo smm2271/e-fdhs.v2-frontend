@@ -1,19 +1,35 @@
 # Frontend
 
-## Broadcast Feed mock preview
+## Broadcast Feed API and mock preview
 
-Open `/broadcasts` after starting the development server. The default mock user is 資訊股長;
-use the Mock 身分 selector to preview 班代表 or read-only 一般學生 permissions.
+The default development server and production build use the real Backend API.
+Start the backend on port 8000, run `npm start`, log in at `/`, then follow
+「查看本週廣播」. The development proxy forwards `/auth` and `/users` unchanged,
+and rewrites `/api/broadcasts...` to the backend's `/broadcasts...` endpoints.
+The browser page route `/broadcasts` must stay with Angular, including refreshes.
+Production hosting must implement the same proxy mapping on the same origin
+and serve HTTPS for the existing Secure HttpOnly `__Host-session` cookie.
+No session token is stored in frontend code or browser storage.
+
+For an explicit UI-only mock preview, run `npm start -- --configuration mock`
+and open `/broadcasts`. The default mock user is 資訊股長; use the Mock 身分
+selector to preview 班代表 or read-only 一般學生. Production configuration
+replaces the environment with `broadcastMock: false`; the mode factory also
+disables mocks whenever `production` is true. Do not deploy a mock build.
 
 - `src/app/services/broadcast/broadcast.mock.ts` contains all sample data and users.
   The scenario clock is fixed at 2026/10/07 15:00 (Asia/Taipei).
 - `broadcast.store.ts` owns weekly filtering, grouping, confirmation, replies and the navigation
-  badge. Future API integration belongs at this boundary; currently all mutations are in memory
-  and reset on reload. `BROADCAST_CLOCK` can be replaced independently.
+  badge. `broadcast.api.ts` calls the API with `withCredentials: true`, loads all feed pages,
+  and maps backend target capabilities into the existing UI. State changes follow successful
+  responses; failed submissions retain the draft. The clock refreshes every minute and reloads
+  the feed when the Taipei display week changes. `BROADCAST_CLOCK` can be replaced in tests.
 - `src/app/pages/broadcast/` contains the feed and recursive inline reply renderer.
   One table becomes cards through CSS at widths of 768px and below.
-- No Broadcast API, backend changes, authentication integration or extra dependencies are included.
-  The existing login route remains at `/`; the student navigation is introduced on the feed
+- Teachers see separate rows for each visible target thread, with the class name beside the sender.
+  Confirmation and reply controls use backend capabilities for that particular target.
+  The same component renders API and mock data; no extra dependencies are required.
+  The existing login route remains at `/`, and the navigation badge lives on the feed
   because this project does not yet have a shared student layout.
 
 Validation: `npm test -- --watch=false` and `npm run build`. This project has no lint script

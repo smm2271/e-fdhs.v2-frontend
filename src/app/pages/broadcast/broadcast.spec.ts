@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
+import { BROADCAST_MOCK } from '../../services/broadcast/broadcast.store';
 import { BroadcastFeed } from './broadcast';
 
 describe('BroadcastFeed', () => {
@@ -8,7 +9,7 @@ describe('BroadcastFeed', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [BroadcastFeed],
-      providers: [provideRouter([])],
+      providers: [provideRouter([]), { provide: BROADCAST_MOCK, useValue: true }],
     }).compileComponents();
     fixture = TestBed.createComponent(BroadcastFeed);
     await fixture.whenStable();

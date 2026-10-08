@@ -17,6 +17,10 @@ export class BroadcastFeed {
   readonly notice = signal('');
   drafts: Record<string, string> = {};
 
+  ngOnInit(): void {
+    void this.store.load();
+  }
+
   toggle(id: string): void {
     this.expanded.update((ids) => {
       const next = new Set(ids);
@@ -26,13 +30,14 @@ export class BroadcastFeed {
     });
   }
 
-  confirm(id: string): void {
-    this.store.confirm(id);
-    this.notice.set('廣播已確認。');
+  async confirm(id: string): Promise<void> {
+    this.notice.set('');
+    if (await this.store.confirm(id)) this.notice.set('廣播已確認。');
   }
 
-  submitReply(id: string): void {
-    if (this.store.addReply(id, this.drafts[id] ?? '')) {
+  async submitReply(id: string): Promise<void> {
+    this.notice.set('');
+    if (await this.store.addReply(id, this.drafts[id] ?? '')) {
       this.drafts[id] = '';
       this.notice.set('回覆已送出。');
     }

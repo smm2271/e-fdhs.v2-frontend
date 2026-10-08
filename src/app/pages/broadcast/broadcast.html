@@ -19,24 +19,35 @@
         <h1>本週廣播</h1>
         <p class="subtitle">閱讀老師的最新通知，掌握本週校園消息。</p>
       </div>
-      <div class="mock-controls">
-        <label for="mock-user">Mock 身分</label>
-        <select
-          id="mock-user"
-          [ngModel]="store.currentUser().id"
-          (ngModelChange)="store.setUser($event)"
-        >
-          @for (user of store.users; track user.id) {
-            <option [value]="user.id">{{ user.role }}</option>
-          }
-        </select>
-        <small>示範時間：{{ store.now() | date: 'MM/dd HH:mm' : '+0800' }} · 資料僅暫存</small>
-      </div>
+      @if (store.mockMode) {
+        <div class="mock-controls">
+          <label for="mock-user">Mock 身分</label>
+          <select
+            id="mock-user"
+            [ngModel]="store.currentUser().id"
+            (ngModelChange)="store.setUser($event)"
+          >
+            @for (user of store.users; track user.id) {
+              <option [value]="user.id">{{ user.role }}</option>
+            }
+          </select>
+          <small>示範時間：{{ store.now() | date: 'MM/dd HH:mm' : '+0800' }} · 資料僅暫存</small>
+        </div>
+      }
     </header>
     <p class="week-summary">
       {{ store.weekLabel() }} <span>共 {{ store.weeklyBroadcasts().length }} 則廣播</span>
     </p>
     <p class="sr-only" role="status">{{ notice() }}</p>
+    @if (store.loading()) {
+      <p role="status">正在載入廣播……</p>
+    }
+    @if (store.error()) {
+      <p role="alert">
+        {{ store.error() }} <button type="button" (click)="store.load()">重新載入</button>
+      </p>
+      <a routerLink="/">前往登入</a>
+    }
     <table class="feed-table" aria-label="本週校園文字廣播">
       <colgroup>
         <col class="sender-col" />
@@ -76,8 +87,13 @@
                     store.isOverdue(broadcast) ? '! 逾期確認' : '✓ 已確認'
                   }}</span>
                   <small [attr.title]="confirmation.confirmedBy">{{ confirmation.role }}</small>
-                } @else if (store.currentUser().canConfirm) {
-                  <button class="confirm-button" type="button" (click)="confirm(broadcast.id)">
+                } @else if (store.canConfirm(broadcast)) {
+                  <button
+                    class="confirm-button"
+                    type="button"
+                    [disabled]="store.busy().has(broadcast.id)"
+                    (click)="confirm(broadcast.id)"
+                  >
                     {{ store.isOverdue(broadcast) ? '補確認' : '確認廣播' }}
                   </button>
                   @if (store.isOverdue(broadcast)) {
@@ -121,7 +137,7 @@
                   } @else {
                     <p class="empty-replies">尚無回覆</p>
                   }
-                  @if (store.currentUser().canReply) {
+                  @if (store.canReply(broadcast)) {
                     <form (ngSubmit)="submitReply(broadcast.id)" class="reply-form">
                       <label [for]="'draft-' + broadcast.id">新增回覆</label>
                       <textarea
@@ -131,7 +147,12 @@
                         rows="2"
                         placeholder="輸入回覆……"
                       ></textarea>
-                      <button type="submit" [disabled]="!(drafts[broadcast.id] || '').trim()">
+                      <button
+                        type="submit"
+                        [disabled]="
+                          store.busy().has(broadcast.id) || !(drafts[broadcast.id] || '').trim()
+                        "
+                      >
                         送出回覆
                       </button>
                     </form>
@@ -144,7 +165,9 @@
       } @empty {
         <tbody>
           <tr>
-            <td colspan="5" class="empty-replies">本週尚無廣播</td>
+            <td colspan="5" class="empty-replies">
+              {{ store.loading() ? '載入中' : store.error() ? '無法載入廣播' : '本週尚無廣播' }}
+            </td>
           </tr>
         </tbody>
       }
