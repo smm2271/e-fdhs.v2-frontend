@@ -1,5 +1,5 @@
 import { DatePipe } from '@angular/common';
-import { Component, inject, signal } from '@angular/core';
+import { Component, effect, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { BroadcastStore } from '../../services/broadcast/broadcast.store';
@@ -18,7 +18,24 @@ export class BroadcastFeed {
   drafts: Record<string, string> = {};
 
   ngOnInit(): void {
-    void this.store.load();
+    this.store.startPolling();
+  }
+
+  ngOnDestroy(): void {
+    this.store.stopPolling();
+  }
+
+  constructor() {
+    let generation = this.store.identityGeneration();
+    effect(() => {
+      const next = this.store.identityGeneration();
+      if (next !== generation) {
+        generation = next;
+        this.expanded.set(new Set());
+        this.drafts = {};
+        this.notice.set('');
+      }
+    });
   }
 
   toggle(id: string): void {

@@ -1,5 +1,6 @@
 import {
   computed,
+  effect,
   DestroyRef,
   inject,
   Injectable,
@@ -9,12 +10,20 @@ import {
 } from '@angular/core';
 import { createMockBroadcasts, MOCK_NOW, MOCK_USERS } from './broadcast.mock';
 import { environment } from '../../../environments/environment';
-import { BroadcastApi } from './broadcast.api';
+import { BroadcastApi, mapBroadcast } from './broadcast.api';
+import { BroadcastSyncClient } from './broadcast.sync';
+import { isoWeek } from './broadcast.hash';
+import { AuthService } from '../auth.service';
 import { Broadcast, BroadcastReply } from './broadcast.types';
 
 export const BROADCAST_MOCK = new InjectionToken<boolean>('Broadcast mock mode', {
   providedIn: 'root',
   factory: () => !environment.production && environment.broadcastMock,
+});
+
+export const BROADCAST_POLL_MS = new InjectionToken<number>('Broadcast poll milliseconds', {
+  providedIn: 'root',
+  factory: () => (environment.production ? 30000 : environment.broadcastPollMs),
 });
 
 export const BROADCAST_CLOCK = new InjectionToken<() => Date>('Broadcast clock', {
@@ -37,37 +46,166 @@ export class BroadcastStore {
   readonly error = signal('');
   readonly busy = signal(new Set<string>());
   private readonly apiPending = signal(0);
-  private loadedWeek = '';
+  private readonly syncClient = new BroadcastSyncClient();
+  readonly syncing = signal(false);
+  readonly identityGeneration = signal(0);
+  private readonly pollMs = inject(BROADCAST_POLL_MS);
+  private timer: ReturnType<typeof setInterval> | undefined;
+  private controller: AbortController | null = null;
+  private initialized = false;
+  private active = false;
+  private readonly selectedWeek = signal<string | null>(null);
+  private identityEpoch = 0;
 
   constructor() {
     if (!this.mockMode) {
+      const auth = this.injector.get(AuthService);
+      let revision = auth.identityRevision();
+      effect(() => {
+        const next = auth.identityRevision();
+        if (revision !== next) {
+          revision = next;
+          this.clearPrivateData();
+          if (this.active) void this.load();
+        }
+      });
       void this.load();
-      const timer = setInterval(() => {
-        this.clockTick.update((tick) => tick + 1);
-        if (this.weekLabel() !== this.loadedWeek) void this.load();
-      }, 60000);
-      inject(DestroyRef).onDestroy(() => clearInterval(timer));
+      inject(DestroyRef).onDestroy(() => this.stopPolling());
     }
   }
 
-  async load(): Promise<void> {
-    if (this.mockMode || this.loading() || this.busy().size) return;
-    this.loadedWeek = this.weekLabel();
-    this.loading.set(true);
-    this.error.set('');
+  startPolling(): void {
+    if (this.mockMode || this.active) return;
+    this.active = true;
+    this.timer = setInterval(() => {
+      this.clockTick.update((tick) => tick + 1);
+      void this.poll();
+    }, this.pollMs);
+    if (!this.initialized && !this.loading()) void this.load();
+  }
+
+  stopPolling(): void {
+    this.active = false;
+    if (this.timer !== undefined) clearInterval(this.timer);
+    this.timer = undefined;
+    this.cancelSync();
+  }
+
+  private cancelSync(): void {
+    this.controller?.abort();
+    this.controller = null;
+    this.syncing.set(false);
+    this.loading.set(false);
+  }
+
+  private clearPrivateData(): void {
+    this.cancelSync();
+    this.syncClient.clear();
+    this.initialized = false;
+    this.identityEpoch++;
+    this.busy.set(new Set());
+    this.identityGeneration.update((value) => value + 1);
     this.state.set([]);
-    this.user.set({ id: '', name: '', role: '', canConfirm: false, canReply: false });
     this.apiPending.set(0);
-    try {
-      const feed = await this.injector.get(BroadcastApi).feed();
-      this.state.set(feed.items);
-      this.user.set(feed.user);
-      this.apiPending.set(feed.pendingCount);
-    } catch (error) {
-      this.showError(error);
-    } finally {
-      this.loading.set(false);
+    this.user.set({ id: '', name: '', role: '', canConfirm: false, canReply: false });
+  }
+
+  async load(): Promise<void> {
+    if (this.mockMode || this.syncing() || this.busy().size) return;
+    await this.poll();
+  }
+
+  async loadWeek(week: string | null): Promise<void> {
+    if (this.mockMode) return;
+    this.selectedWeek.set(week);
+    this.cancelSync();
+    this.syncClient.clear();
+    this.initialized = false;
+    this.state.set([]);
+    this.apiPending.set(0);
+    await this.load();
+  }
+
+  async poll(): Promise<void> {
+    if (this.mockMode || this.syncing() || this.busy().size) return;
+    const week = this.selectedWeek() ?? isoWeek(this.now());
+    if (this.syncClient.week !== null && this.syncClient.week !== week) {
+      this.syncClient.clear();
+      this.initialized = false;
+      this.state.set([]);
+      this.apiPending.set(0);
     }
+    const controller = new AbortController();
+    this.controller = controller;
+    this.syncing.set(true);
+    this.loading.set(!this.initialized);
+    try {
+      const result = await this.syncClient.synchronize(
+        this.injector.get(BroadcastApi),
+        week,
+        controller.signal,
+        () => {
+          this.syncClient.clear();
+          this.state.set([]);
+          this.user.set({ id: '', name: '', role: '', canConfirm: false, canReply: false });
+          this.apiPending.set(0);
+          this.identityEpoch++;
+          this.identityGeneration.update((value) => value + 1);
+        },
+      );
+      if (controller.signal.aborted || this.controller !== controller) return;
+      if (result.changed) {
+        this.state.update((items) =>
+          result.rows.map((row) => {
+            const previous = items.find((item) => item.id === row.id);
+            if (!previous) return row;
+            if (JSON.stringify(previous) === JSON.stringify(row)) return previous;
+            return {
+              ...row,
+              replies:
+                JSON.stringify(previous.replies) === JSON.stringify(row.replies)
+                  ? previous.replies
+                  : row.replies,
+              confirmation:
+                JSON.stringify(previous.confirmation) === JSON.stringify(row.confirmation)
+                  ? previous.confirmation
+                  : row.confirmation,
+            };
+          }),
+        );
+      }
+      if (JSON.stringify(result.user) !== JSON.stringify(this.user())) this.user.set(result.user);
+      this.updatePending();
+      this.initialized = true;
+      this.error.set('');
+    } catch (error) {
+      if (controller.signal.aborted || this.controller !== controller) return;
+      const status = (error as { status?: number }).status;
+      if (status === 401 || status === 403) {
+        this.clearPrivateData();
+        if (status === 401) this.stopPolling();
+      } else if (error instanceof Error && /schema|membership|Incomplete/.test(error.message)) {
+        this.syncClient.clear();
+        this.initialized = false;
+      }
+      if (status === 409) this.error.set('同步期間資料已更新，下次輪詢會重新取得。');
+      else this.showError(error);
+    } finally {
+      if (this.controller === controller) {
+        this.controller = null;
+        this.syncing.set(false);
+        this.loading.set(false);
+      }
+    }
+  }
+
+  private updatePending(): void {
+    const currentWeek = isoWeek(this.now());
+    this.apiPending.set(
+      this.state().filter(
+        (b) => this.canConfirm(b) && !b.confirmation && isoWeek(new Date(b.sentAt)) === currentWeek,
+      ).length,
+    );
   }
 
   canConfirm(b: Broadcast): boolean {
@@ -100,25 +238,30 @@ export class BroadcastStore {
       return false;
     this.busy.update((ids) => new Set([...ids, id]));
     this.error.set('');
+    const epoch = this.identityEpoch;
     try {
       const api = this.injector.get(BroadcastApi);
-      const updated = operation === 'confirm' ? await api.confirm(b) : await api.reply(b, content);
+      const dto =
+        operation === 'confirm' ? await api.confirmRaw(b) : await api.replyRaw(b, content);
+      if (epoch !== this.identityEpoch) return false;
+      this.cancelSync();
+      this.syncClient.acceptMutation(dto);
+      const updated = mapBroadcast(dto);
       this.state.update((items) =>
         items.map((item) => updated.find((next) => next.id === item.id) ?? item),
       );
-      if (operation === 'confirm' && this.weeklyBroadcasts().some((item) => item.id === id)) {
-        this.apiPending.update((count) => Math.max(0, count - 1));
-      }
+      this.updatePending();
       return true;
     } catch (error) {
-      this.showError(error);
+      if (epoch === this.identityEpoch) this.showError(error);
       return false;
     } finally {
-      this.busy.update((ids) => {
-        const next = new Set(ids);
-        next.delete(id);
-        return next;
-      });
+      if (epoch === this.identityEpoch)
+        this.busy.update((ids) => {
+          const next = new Set(ids);
+          next.delete(id);
+          return next;
+        });
     }
   }
   private readonly state = signal<Broadcast[]>(this.mockMode ? createMockBroadcasts() : []);
@@ -132,6 +275,16 @@ export class BroadcastStore {
   readonly users = MOCK_USERS;
   private replySequence = 0;
   readonly weekLabel = computed(() => {
+    const selected = this.selectedWeek();
+    if (!this.mockMode && selected && /^\d{4}-W\d{2}$/.test(selected)) {
+      const year = Number(selected.slice(0, 4));
+      const week = Number(selected.slice(6));
+      const monday = new Date(Date.UTC(year, 0, 4));
+      monday.setUTCDate(monday.getUTCDate() - ((monday.getUTCDay() + 6) % 7) + (week - 1) * 7);
+      const sunday = new Date(monday);
+      sunday.setUTCDate(sunday.getUTCDate() + 6);
+      return `${this.dateKey(monday.toISOString()).slice(5).replace('-', '/')} \u2014 ${this.dateKey(sunday.toISOString()).slice(5).replace('-', '/')}`;
+    }
     const date = this.dateKey(this.now().toISOString());
     const start = new Date(`${date}T12:00:00+08:00`);
     const weekday = new Date(`${date}T00:00:00Z`).getUTCDay();
@@ -147,6 +300,8 @@ export class BroadcastStore {
     start.setUTCDate(start.getUTCDate() - ((weekday + 6) % 7));
     const end = new Date(start);
     end.setUTCDate(end.getUTCDate() + 7);
+    if (!this.mockMode)
+      return [...this.broadcasts()].sort((a, b) => Date.parse(b.sentAt) - Date.parse(a.sentAt));
     return this.broadcasts()
       .filter((b) => new Date(b.sentAt) >= start && new Date(b.sentAt) < end)
       .sort((a, b) => Date.parse(b.sentAt) - Date.parse(a.sentAt));

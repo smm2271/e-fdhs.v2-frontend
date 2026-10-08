@@ -1,1 +1,1 @@
-export const environment = { production: false, broadcastMock: true };
+export const environment = { production: false, broadcastPollMs: 30000, broadcastMock: true };

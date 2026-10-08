@@ -1,4 +1,6 @@
 import { TestBed } from '@angular/core/testing';
+import { webcrypto } from 'node:crypto';
+import { syncFixture } from './broadcast.sync.fixture';
 import { vi } from 'vitest';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting, HttpTestingController } from '@angular/common/http/testing';
@@ -37,6 +39,7 @@ describe('Broadcast API store', () => {
   let http: HttpTestingController;
   let clockDate: string;
   beforeEach(() => {
+    vi.stubGlobal('crypto', webcrypto);
     clockDate = '2026-10-07T07:00:00Z';
     TestBed.configureTestingModule({
       imports: [BroadcastFeed],
@@ -54,10 +57,10 @@ describe('Broadcast API store', () => {
 
   async function loaded() {
     const store = TestBed.inject(BroadcastStore);
-    const request = http.expectOne('/api/broadcasts?limit=100&offset=0');
+    const request = http.expectOne('/api/broadcasts/sync');
     expect(request.request.withCredentials).toBe(true);
-    request.flush(feed());
-    await settle();
+    request.flush(await syncFixture(feed().items));
+    await vi.waitFor(() => expect(store.loading()).toBe(false));
     return store;
   }
 
@@ -65,17 +68,13 @@ describe('Broadcast API store', () => {
     const store = TestBed.inject(BroadcastStore);
     expect(store.loading()).toBe(true);
     expect(store.broadcasts()).toEqual([]);
-    http
-      .expectOne('/api/broadcasts?limit=100&offset=0')
-      .flush({}, { status: 401, statusText: 'Unauthorized' });
+    http.expectOne('/api/broadcasts/sync').flush({}, { status: 401, statusText: 'Unauthorized' });
     await settle();
     expect(store.loading()).toBe(false);
     expect(store.error()).toBeTruthy();
     expect(store.currentUser().canConfirm).toBe(false);
     const retry = store.load();
-    http
-      .expectOne('/api/broadcasts?limit=100&offset=0')
-      .flush({ ...feed(), items: [], pending_count: 0 });
+    http.expectOne('/api/broadcasts/sync').flush(await syncFixture([]));
     await retry;
     expect(store.error()).toBe('');
     expect(store.weeklyBroadcasts()).toEqual([]);
@@ -117,8 +116,8 @@ describe('Broadcast API store', () => {
     const response = feed();
     response.items[0].targets[0].can_confirm = false;
     response.items[0].targets[0].can_reply = false;
-    http.expectOne('/api/broadcasts?limit=100&offset=0').flush(response);
-    await settle();
+    http.expectOne('/api/broadcasts/sync').flush(await syncFixture(response.items));
+    await vi.waitFor(() => expect(store.loading()).toBe(false));
     const b = store.broadcasts()[0];
     expect(store.canConfirm(b)).toBe(false);
     expect(store.canReply(b)).toBe(false);
@@ -172,17 +171,16 @@ describe('Broadcast API store', () => {
     vi.useFakeTimers();
     try {
       const store = TestBed.inject(BroadcastStore);
-      http.expectOne('/api/broadcasts?limit=100&offset=0').flush(feed());
-      await vi.advanceTimersByTimeAsync(0);
+      http.expectOne('/api/broadcasts/sync').flush(await syncFixture(feed().items));
+      await vi.waitFor(() => expect(store.loading()).toBe(false));
+      store.startPolling();
       expect(store.pendingCount()).toBe(1);
       clockDate = '2026-10-12T00:00:00+08:00';
-      await vi.advanceTimersByTimeAsync(60000);
+      await vi.advanceTimersByTimeAsync(30000);
       expect(store.pendingCount()).toBe(0);
       expect(store.loading()).toBe(true);
-      http
-        .expectOne('/api/broadcasts?limit=100&offset=0')
-        .flush({ ...feed(), items: [], pending_count: 0 });
-      await vi.advanceTimersByTimeAsync(0);
+      http.expectOne('/api/broadcasts/sync').flush(await syncFixture([], '2026-W42'));
+      await vi.waitFor(() => expect(store.loading()).toBe(false));
       expect(store.weekLabel()).toBe('10/12 \u2014 10/18');
       expect(store.weeklyBroadcasts()).toEqual([]);
     } finally {
@@ -194,8 +192,8 @@ describe('Broadcast API store', () => {
   it('keeps the UI draft and avoids a success notice after a failed submission', async () => {
     const fixture = TestBed.createComponent(BroadcastFeed);
     fixture.detectChanges();
-    http.expectOne('/api/broadcasts?limit=100&offset=0').flush(feed());
-    await settle();
+    http.expectOne('/api/broadcasts/sync').flush(await syncFixture(feed().items));
+    await vi.waitFor(() => expect(fixture.componentInstance.store.loading()).toBe(false));
     fixture.detectChanges();
     const component = fixture.componentInstance;
     const id = component.store.broadcasts()[0].id;

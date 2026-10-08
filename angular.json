@@ -67,6 +67,16 @@
                   "with": "src/environments/environment.mock.ts"
                 }
               ]
+            },
+            "sync-e2e": {
+              "optimization": false,
+              "sourceMap": true,
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.sync-e2e.ts"
+                }
+              ]
             }
           },
           "defaultConfiguration": "production"
@@ -85,6 +95,9 @@
             },
             "mock": {
               "buildTarget": "frontend:build:mock"
+            },
+            "sync-e2e": {
+              "buildTarget": "frontend:build:sync-e2e"
             }
           },
           "defaultConfiguration": "development"

@@ -21,14 +21,16 @@ disables mocks whenever `production` is true. Do not deploy a mock build.
   The scenario clock is fixed at 2026/10/07 15:00 (Asia/Taipei).
 - `broadcast.store.ts` owns weekly filtering, grouping, confirmation, replies and the navigation
   badge. `broadcast.api.ts` calls the API with `withCredentials: true`, loads all feed pages,
-  and maps backend target capabilities into the existing UI. State changes follow successful
-  responses; failed submissions retain the draft. The clock refreshes every minute and reloads
-  the feed when the Taipei display week changes. `BROADCAST_CLOCK` can be replaced in tests.
+  and maps backend target capabilities into the existing UI. The feed now initializes
+  through hash synchronization, while the legacy API feed method remains available. State changes follow successful
+  responses; failed submissions retain the draft. The active feed recomputes client hashes every 30 seconds, synchronizes only mismatched
+  layers, and reinitializes when the Taipei publication week changes. `BROADCAST_CLOCK` can be replaced in tests.
 - `src/app/pages/broadcast/` contains the feed and recursive inline reply renderer.
   One table becomes cards through CSS at widths of 768px and below.
 - Teachers see separate rows for each visible target thread, with the class name beside the sender.
   Confirmation and reply controls use backend capabilities for that particular target.
-  The same component renders API and mock data; no extra dependencies are required.
+  The same component renders API and mock data. Node type declarations are added for
+  Web Crypto tests only; no runtime dependency is added.
   The existing login route remains at `/`, and the navigation badge lives on the feed
   because this project does not yet have a shared student layout.
 
@@ -92,3 +94,16 @@ Angular CLI does not come with an end-to-end testing framework by default. You c
 ## Additional Resources
 
 For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+
+
+## Hash window polling
+
+Production and normal development default to 30 seconds. An explicit local browser
+acceptance configuration is available via `npm start -- --configuration sync-e2e`
+(1 second, real API). Mock mode still requires `--configuration mock` and makes
+no synchronization requests. Do not deploy either testing configuration.
+
+The active Component owns polling start/stop; destruction cancels requests.
+`BroadcastStore.loadWeek('2026-W40')` loads history on demand; `loadWeek(null)`
+returns to the current week. Local actions update raw projections immediately.
+See [protocol details, limits and observed browser acceptance](docs/hash-sync.md).

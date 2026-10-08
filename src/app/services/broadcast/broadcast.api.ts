@@ -1,9 +1,12 @@
 import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, fromEvent, Observable, takeUntil } from 'rxjs';
+import { SyncRequest, SyncResponse, ChunkResponse, Layer } from './broadcast.sync.types';
 import { Broadcast, BroadcastReply, BroadcastUser } from './broadcast.types';
 
-interface ReplyDto {
+export interface ReplyDto {
+  ref_id?: string | null;
+  author_id?: string;
   id: string;
   author_name: string;
   role: string;
@@ -12,6 +15,7 @@ interface ReplyDto {
   replies: ReplyDto[];
 }
 export interface BroadcastDto {
+  author_id?: string;
   id: string;
   sender_name: string;
   created_at: string;
@@ -23,7 +27,12 @@ export interface BroadcastDto {
     can_confirm: boolean;
     can_reply: boolean;
     confirmation_state: Broadcast['confirmationState'];
-    confirmation: { confirmed_at: string; confirmed_by: string; role: string } | null;
+    confirmation: {
+      confirmed_by_account_id?: string;
+      confirmed_at: string;
+      confirmed_by: string;
+      role: string;
+    } | null;
     replies: ReplyDto[];
     reply_count: number;
   }[];
@@ -101,25 +110,58 @@ export class BroadcastApi {
     };
   }
 
-  async confirm(b: Broadcast): Promise<Broadcast[]> {
-    const dto = await firstValueFrom(
+  private request<T>(request: Observable<T>, signal?: AbortSignal): Promise<T> {
+    if (signal?.aborted) return Promise.reject(new DOMException('Aborted', 'AbortError'));
+    return firstValueFrom(signal ? request.pipe(takeUntil(fromEvent(signal, 'abort'))) : request);
+  }
+
+  sync(payload: SyncRequest, signal?: AbortSignal): Promise<SyncResponse> {
+    return this.request(
+      this.http.post<SyncResponse>('/api/broadcasts/sync', payload, { withCredentials: true }),
+      signal,
+    );
+  }
+
+  chunk(
+    windowId: string,
+    layer: Layer,
+    week: string,
+    hash: string,
+    offset: number,
+    scope: string,
+    signal?: AbortSignal,
+  ): Promise<ChunkResponse> {
+    return this.request(
+      this.http.get<ChunkResponse>(`/api/broadcasts/sync/windows/${windowId}/layers/${layer}`, {
+        withCredentials: true,
+        params: { week, expected_hash: hash, offset, scope_key: scope },
+      }),
+      signal,
+    );
+  }
+
+  confirmRaw(b: Broadcast): Promise<BroadcastDto> {
+    return firstValueFrom(
       this.http.post<BroadcastDto>(
         `/api/broadcasts/${b.broadcastId}/confirmations`,
         { group_id: b.groupId },
         { withCredentials: true },
       ),
     );
-    return mapBroadcast(dto);
   }
-
-  async reply(b: Broadcast, content: string, refId?: string): Promise<Broadcast[]> {
-    const dto = await firstValueFrom(
+  replyRaw(b: Broadcast, content: string, refId?: string): Promise<BroadcastDto> {
+    return firstValueFrom(
       this.http.post<BroadcastDto>(
         `/api/broadcasts/${b.broadcastId}/replies`,
         { content, group_id: b.groupId, ref_id: refId ?? null },
         { withCredentials: true },
       ),
     );
-    return mapBroadcast(dto);
+  }
+  async confirm(b: Broadcast): Promise<Broadcast[]> {
+    return mapBroadcast(await this.confirmRaw(b));
+  }
+  async reply(b: Broadcast, content: string, refId?: string): Promise<Broadcast[]> {
+    return mapBroadcast(await this.replyRaw(b, content, refId));
   }
 }

@@ -1,6 +1,6 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, switchMap } from 'rxjs';
+import { Observable, switchMap, tap } from 'rxjs';
 
 export type AccountType = 'student' | 'teacher';
 
@@ -25,11 +25,19 @@ interface LoginRequest {
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly http = inject(HttpClient);
+  readonly identityRevision = signal(0);
+
+  logout(): Observable<void> {
+    return this.http
+      .post<void>('/auth/logout', {}, { withCredentials: true })
+      .pipe(tap(() => this.identityRevision.update((value) => value + 1)));
+  }
 
   login(request: LoginRequest): Observable<AccountProfile> {
-    return this.http
-      .post<void>('/auth/login', request, { withCredentials: true })
-      .pipe(switchMap(() => this.me()));
+    return this.http.post<void>('/auth/login', request, { withCredentials: true }).pipe(
+      switchMap(() => this.me()),
+      tap(() => this.identityRevision.update((value) => value + 1)),
+    );
   }
 
   me(): Observable<AccountProfile> {
