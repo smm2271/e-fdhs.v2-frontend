@@ -2,6 +2,10 @@
   <header class="site-header">
     <a class="brand" routerLink="/">校園系統</a>
     <nav aria-label="學生導覽">
+      @if (store.currentUser().canPublish) {
+        <a routerLink="/broadcasts/new" class="nav-link">發布廣播</a>
+        <a routerLink="/broadcasts/mine" class="nav-link">我發布的廣播</a>
+      }
       <a routerLink="/broadcasts" aria-current="page" class="nav-link"
         >查看廣播
         @if (store.pendingCount()) {
@@ -80,7 +84,7 @@
                   broadcast.sentAt | date: 'HH:mm' : '+0800'
                 }}</time>
               </td>
-              <td class="content">{{ broadcast.content }}</td>
+              <td class="content"><app-rich-content [content]="broadcast.content" /></td>
               <td class="confirmation">
                 @if (broadcast.confirmation; as confirmation) {
                   <span class="status" [class.overdue]="store.isOverdue(broadcast)">{{

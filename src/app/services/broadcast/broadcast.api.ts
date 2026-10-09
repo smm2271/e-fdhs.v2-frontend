@@ -45,6 +45,7 @@ interface FeedDto {
     role: string;
     can_confirm: boolean;
     can_reply: boolean;
+    can_publish?: boolean;
   };
   pending_count: number;
 }
@@ -105,6 +106,7 @@ export class BroadcastApi {
         role: first.current_user.role,
         canConfirm: first.current_user.can_confirm,
         canReply: first.current_user.can_reply,
+        canPublish: first.current_user.can_publish,
       },
       pendingCount: first.pending_count,
     };

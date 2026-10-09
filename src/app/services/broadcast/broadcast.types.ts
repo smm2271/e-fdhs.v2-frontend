@@ -6,6 +6,7 @@ export interface BroadcastUser {
   role: string;
   canConfirm: boolean;
   canReply: boolean;
+  canPublish?: boolean;
 }
 
 export interface BroadcastReply {

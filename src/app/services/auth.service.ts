@@ -7,6 +7,7 @@ export type AccountType = 'student' | 'teacher';
 export interface AccountProfile {
   id: string;
   account: string;
+  account_type: AccountType;
   position_name: string;
   group_name: string;
   display_name: string | null;

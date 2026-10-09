@@ -4,10 +4,11 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { BroadcastStore } from '../../services/broadcast/broadcast.store';
 import { ReplyTree } from './reply-tree';
+import { RichContent } from './rich-content';
 
 @Component({
   selector: 'app-broadcast',
-  imports: [DatePipe, FormsModule, RouterLink, ReplyTree],
+  imports: [DatePipe, FormsModule, RouterLink, ReplyTree, RichContent],
   templateUrl: './broadcast.html',
   styleUrl: './broadcast.scss',
 })

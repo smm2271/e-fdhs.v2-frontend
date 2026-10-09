@@ -2,7 +2,10 @@
   @if (welcomeName(); as name) {
     <section class="welcome-card" aria-live="polite">
       <h1>歡迎，{{ name }}</h1>
-      <a href="/broadcasts">查看本週廣播</a>
+      @if (role() === 'teacher') {
+        <p><a routerLink="/broadcasts/new">發布廣播</a></p>
+        <p><a routerLink="/broadcasts/mine">我發布的廣播</a></p>
+      } @else { <a routerLink="/broadcasts">查看本週廣播</a> }
     </section>
   } @else {
     <div class="login-card">

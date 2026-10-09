@@ -151,6 +151,7 @@ export class BroadcastSyncClient {
         role: current.role,
         canConfirm: current.can_confirm,
         canReply: current.can_reply,
+        canPublish: current.can_publish,
       },
       changed,
     };

@@ -1,9 +1,10 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 
 @Component({
-  imports: [FormsModule],
+  imports: [FormsModule, RouterLink],
   selector: 'app-login',
   styleUrl: './login.scss',
   templateUrl: './login.html',
@@ -35,6 +36,7 @@ export class Login {
       password: this.password,
     }).subscribe({
       next: (profile) => {
+        this.role.set(profile.account_type);
         this.welcomeName.set(profile.display_name?.trim() || profile.account);
         this.isSubmitting.set(false);
       },
