@@ -1,5 +1,5 @@
 <div class="broadcast-shell">
-  <header class="site-header">
+  <header class="site-header campus-nav">
     <a class="brand" routerLink="/">校園系統</a>
     <nav aria-label="學生導覽">
       @if (store.currentUser().canPublish) {
@@ -16,7 +16,7 @@
       </a>
     </nav>
   </header>
-  <main>
+  <main class="campus-page campus-student-broadcasts">
     <header class="feed-header">
       <div>
         <p class="eyebrow">校園文字廣播</p>
@@ -77,7 +77,7 @@
             </th>
           </tr>
           @for (broadcast of group.broadcasts; track broadcast.id) {
-            <tr class="broadcast-row" [class.is-expanded]="expanded().has(broadcast.id)">
+            <tr class="broadcast-row broadcast-card" [class.is-expanded]="expanded().has(broadcast.id)">
               <td class="sender">{{ broadcast.senderName }}</td>
               <td class="sent-time">
                 <time [attr.datetime]="broadcast.sentAt">{{
@@ -142,7 +142,7 @@
                     <p class="empty-replies">尚無回覆</p>
                   }
                   @if (store.canReply(broadcast)) {
-                    <form (ngSubmit)="submitReply(broadcast.id)" class="reply-form">
+                    <form (ngSubmit)="submitReply(broadcast.id)" class="reply-form campus-form">
                       <label [for]="'draft-' + broadcast.id">新增回覆</label>
                       <textarea
                         [id]="'draft-' + broadcast.id"

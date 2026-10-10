@@ -1,8 +1,8 @@
 :host {
   display: block;
-  font-family: sans-serif;
-  color: #000;
-  background: #fff;
+  font-family: var(--campus-font);
+  color: var(--campus-text);
+  background: var(--campus-surface);
   min-height: 100vh;
   line-height: 1.5;
 }
@@ -18,9 +18,9 @@ select,
 textarea {
   font: inherit;
   color: inherit;
-  border: 1px solid #000;
+  border: 1px solid var(--campus-text);
   border-radius: 0;
-  background: #fff;
+  background: var(--campus-surface);
 }
 button,
 select {
@@ -31,14 +31,14 @@ button {
   cursor: pointer;
 }
 button:hover:not(:disabled) {
-  background: #eee;
+  background: var(--campus-hover);
 }
 button:disabled {
   opacity: 0.5;
   cursor: default;
 }
 :is(a, button, select, textarea):focus-visible {
-  outline: 2px solid #000;
+  outline: 2px solid var(--campus-text);
   outline-offset: 3px;
 }
 .site-header {
@@ -47,7 +47,7 @@ button:disabled {
   flex-wrap: wrap;
   gap: 1rem 2rem;
   padding: 1rem 2rem;
-  border-bottom: 1px solid #000;
+  border-bottom: 1px solid var(--campus-text);
 }
 .brand {
   font-size: 1.25rem;
@@ -58,15 +58,15 @@ button:disabled {
   align-items: center;
   gap: 0.5rem;
   min-height: 44px;
-  border-bottom: 2px solid #000;
+  border-bottom: 2px solid var(--campus-text);
 }
 .badge {
   display: inline-grid;
   place-items: center;
   min-width: 24px;
   padding: 0 0.375rem;
-  background: #000;
-  color: #fff;
+  background: var(--campus-text);
+  color: var(--campus-surface);
   font-size: 0.75rem;
   border-radius: 12px;
 }
@@ -86,7 +86,7 @@ main {
 .subtitle,
 small,
 .sent-time {
-  color: #595959;
+  color: var(--campus-muted);
   font-size: 0.875rem;
 }
 h1 {
@@ -107,7 +107,7 @@ h1 {
   padding-bottom: 1rem;
 }
 .week-summary span {
-  color: #595959;
+  color: var(--campus-muted);
 }
 .feed-table {
   width: 100%;
@@ -127,13 +127,13 @@ h1 {
   width: 110px;
 }
 thead {
-  border-top: 1px solid #000;
-  border-bottom: 1px solid #000;
+  border-top: 1px solid var(--campus-text);
+  border-bottom: 1px solid var(--campus-text);
 }
 thead th {
   padding: 1rem 0.75rem;
   font-size: 0.875rem;
-  color: #595959;
+  color: var(--campus-muted);
 }
 .date-row th {
   padding: 1.75rem 0 0.75rem;
@@ -149,12 +149,12 @@ thead th {
   content: '';
   flex: 1;
   height: 1px;
-  background: #ccc;
+  background: var(--campus-border);
 }
 .broadcast-row td {
   padding: 1.5rem 0.75rem;
   vertical-align: top;
-  border-bottom: 1px solid #ddd;
+  border-bottom: 1px solid var(--campus-border);
   overflow-wrap: anywhere;
 }
 .sender {
@@ -173,15 +173,15 @@ thead th {
   font-weight: bold;
 }
 .overdue {
-  color: #914300;
+  color: var(--campus-warning);
 }
 .confirm-button {
-  background: #000;
-  color: #fff;
+  background: var(--campus-text);
+  color: var(--campus-surface);
   font-size: 0.875rem;
 }
 .confirm-button:hover:not(:disabled) {
-  background: #333;
+  background: var(--campus-accent-hover);
 }
 .reply-toggle {
   border-color: transparent;
@@ -192,13 +192,13 @@ thead th {
 }
 .reply-row td {
   padding: 0 0.75rem 1.5rem;
-  border-bottom: 1px solid #ddd;
+  border-bottom: 1px solid var(--campus-border);
 }
 .reply-row section {
   margin-left: 190px;
   padding: 1rem 1.25rem;
-  background: #f7f7f7;
-  border-left: 2px solid #ccc;
+  background: var(--campus-surface-alt);
+  border-left: 2px solid var(--campus-border);
   min-width: 0;
 }
 h2 {
@@ -206,7 +206,7 @@ h2 {
   font-size: 0.875rem;
 }
 .empty-replies {
-  color: #595959;
+  color: var(--campus-muted);
   padding: 1rem 0;
 }
 .reply-form {
@@ -277,7 +277,7 @@ textarea {
     grid-template-columns: minmax(0, 1fr) auto;
     grid-template-areas: 'sender time' 'content content' 'confirmation reply';
     gap: 1rem;
-    border: 1px solid #000;
+    border: 1px solid var(--campus-text);
     padding: 1.25rem;
     margin-top: 0.75rem;
   }
@@ -311,15 +311,15 @@ textarea {
     display: block;
   }
   .reply-row td {
-    border: 1px solid #000;
+    border: 1px solid var(--campus-text);
     border-top: 0;
     padding: 0 1.25rem 1.25rem;
   }
   .reply-row section {
     margin: 0;
     border-left: 0;
-    border-top: 1px solid #ccc;
+    border-top: 1px solid var(--campus-border);
     padding: 1rem 0 0;
-    background: #fff;
+    background: var(--campus-surface);
   }
 }

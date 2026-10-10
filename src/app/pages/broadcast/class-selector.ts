@@ -37,7 +37,7 @@ import { ClassDto } from '../../services/broadcast/teacher-broadcast.api';
   `,
   styles: `:host { display: block; } input[type=search] { width: 100%; box-sizing: border-box; padding: .7rem; }
     .grades { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,260px),1fr)); gap: .8rem; }
-    .grade { border: 1px solid #d3dce3; border-radius: .5rem; min-width: 0; }
+    .grade { border: 1px solid var(--campus-border); border-radius: .5rem; min-width: 0; }
     .grade-heading { display: flex; align-items: center; padding: .4rem; }
     button { border: 0; background: transparent; padding: .6rem; text-align: left; flex: 1; cursor: pointer; }
     .classes { display: grid; gap: .4rem; padding: .7rem; }

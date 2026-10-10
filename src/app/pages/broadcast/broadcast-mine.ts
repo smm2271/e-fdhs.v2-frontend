@@ -7,22 +7,22 @@ import { RichContent } from './rich-content';
 
 @Component({
   imports: [DatePipe, RouterLink, RichContent],
-  template: `<main>
-    <nav aria-label="教師廣播導覽"><a routerLink="/">校園系統</a><a routerLink="/broadcasts/new">發布廣播</a><a routerLink="/broadcasts/mine" aria-current="page">我發布的廣播</a></nav>
+  template: `<main class="campus-page campus-teacher-mine">
+    <nav class="campus-nav" aria-label="教師廣播導覽"><a routerLink="/">校園系統</a><a routerLink="/broadcasts/new">發布廣播</a><a routerLink="/broadcasts/mine" aria-current="page">我發布的廣播</a></nav>
     <h1>我發布的廣播</h1><p>每 30 秒更新各班確認進度。</p>
     <button (click)="refresh()" [disabled]="loading()">{{ loading() ? '更新中…' : '更新進度' }}</button>
     @if (error()) { <p role="alert">{{ error() }}</p> }
     @for (item of items(); track item.id) {
-      <article [id]="'broadcast-' + item.id" [class.fresh]="item.id === freshId">
+      <article class="broadcast-card" [id]="'broadcast-' + item.id" [class.fresh]="item.id === freshId">
         @if (item.id === freshId) { <span class="badge" role="status">剛剛發布</span> }
         <h2>發布時間 <time [attr.datetime]="item.created_at">{{ item.created_at | date:'yyyy/MM/dd HH:mm':'+0800' }}</time></h2>
         <app-rich-content [content]="item.content" />
         <p>目標班級：@for (target of item.targets; track target.group_id; let last = $last) { {{ target.group_name }}{{ last ? '' : '、' }} }</p>
         <p>已確認 {{ confirmed(item) }}／{{ item.targets.length }} 班</p>
-        <progress [value]="confirmed(item)" [max]="item.targets.length" [attr.aria-label]="'已確認 ' + confirmed(item) + '／' + item.targets.length + ' 班'"></progress>
+        <progress class="broadcast-progress" [value]="confirmed(item)" [max]="item.targets.length" [attr.aria-label]="'已確認 ' + confirmed(item) + '／' + item.targets.length + ' 班'"></progress>
         <details><summary>查看各班確認狀態</summary>
           @for (target of item.targets; track target.group_id) {
-            <div class="target"><strong>{{ target.group_name }}</strong><span>{{ stateLabel(target.confirmation_state) }}</span>
+            <div class="target broadcast-target-status"><strong>{{ target.group_name }}</strong><span>{{ stateLabel(target.confirmation_state) }}</span>
               <span>@if (target.confirmation; as confirmation) { {{ confirmation.role }} · {{ confirmation.confirmed_by }}<br />{{ confirmation.confirmed_at | date:'yyyy/MM/dd HH:mm':'+0800' }} } @else { — }</span>
             </div>
           }

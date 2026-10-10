@@ -18,9 +18,9 @@ import { Component, ElementRef, input, model, ViewChild } from '@angular/core';
     <small role="status">{{ error }}</small>
   `,
   styles: `:host { display: block; min-width: 0; } .toolbar,.link-controls { display: flex; flex-wrap: wrap; gap: .4rem; }
-    button,input { padding: .5rem; max-width: 100%; box-sizing: border-box; } .editor { border: 1px solid #b9c8d1;
+    button,input { padding: .5rem; max-width: 100%; box-sizing: border-box; } .editor { border: 1px solid var(--campus-border);
     border-radius: .4rem; padding: 1rem; min-height: 14rem; overflow-wrap: anywhere; margin: .5rem 0; }
-    .editor:focus { outline: 2px solid #166b77; } label { display: flex; flex-wrap: wrap; gap: .4rem; align-items: center; }`,
+    .editor:focus { outline: 2px solid var(--campus-accent); } label { display: flex; flex-wrap: wrap; gap: .4rem; align-items: center; }`,
 })
 export class RichEditor {
   @ViewChild('editor', { static: true }) editor!: ElementRef<HTMLElement>;

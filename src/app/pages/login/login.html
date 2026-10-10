@@ -1,6 +1,6 @@
-<main class="login-page">
+<main class="login-page campus-page campus-login">
   @if (welcomeName(); as name) {
-    <section class="welcome-card" aria-live="polite">
+    <section class="welcome-card campus-panel" aria-live="polite">
       <h1>歡迎，{{ name }}</h1>
       @if (role() === 'teacher') {
         <p><a routerLink="/broadcasts/new">發布廣播</a></p>
@@ -8,13 +8,13 @@
       } @else { <a routerLink="/broadcasts">查看本週廣播</a> }
     </section>
   } @else {
-    <div class="login-card">
+    <div class="login-card campus-panel">
       <section class="login-branding">
         <div class="login-branding-content">
           <h1>校務系統</h1>
         </div>
       </section>
-      <form class="login-form" (ngSubmit)="login()">
+      <form class="login-form campus-form" (ngSubmit)="login()">
         <header class="login-form-header">
           <h2>帳號登入</h2>
           <p>請輸入您的帳號與密碼</p>

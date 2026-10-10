@@ -41,7 +41,7 @@ import { BroadcastReply } from '../../services/broadcast/broadcast.types';
       font-weight: bold;
     }
     time {
-      color: #595959;
+      color: var(--campus-muted);
     }
     p {
       white-space: pre-wrap;
@@ -52,7 +52,7 @@ import { BroadcastReply } from '../../services/broadcast/broadcast.types';
     app-reply-tree {
       margin: 0.5rem 0 0 0.75rem;
       padding-left: 0.75rem;
-      border-left: 1px solid #aaa;
+      border-left: 1px solid var(--campus-border);
     }
     @media (max-width: 768px) {
       app-reply-tree {

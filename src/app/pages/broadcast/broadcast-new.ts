@@ -8,17 +8,17 @@ import { RichContent, RICH_PREFIX } from './rich-content';
 @Component({
   imports: [RouterLink, ClassSelector, RichEditor, RichContent],
   template: `
-    <main>
-      <nav aria-label="教師廣播導覽"><a routerLink="/">校園系統</a><a routerLink="/broadcasts/new" aria-current="page">發布廣播</a><a routerLink="/broadcasts/mine">我發布的廣播</a></nav>
+    <main class="campus-page campus-teacher-publish">
+      <nav class="campus-nav" aria-label="教師廣播導覽"><a routerLink="/">校園系統</a><a routerLink="/broadcasts/new" aria-current="page">發布廣播</a><a routerLink="/broadcasts/mine">我發布的廣播</a></nav>
       <h1>發布廣播</h1><p>選擇班級並編輯通知，發布前可再次確認內容。</p>
       @if (loading()) { <p role="status">正在載入班級……</p> }
       @if (loadError()) { <p role="alert">{{ loadError() }}</p><button (click)="load()">重新載入班級</button> }
-      <section><h2>1. 發布對象</h2><app-class-selector [classes]="classes()" [(selected)]="selected" [disabled]="locked()" /></section>
-      <section><h2>2. 廣播內容</h2><app-rich-editor [(html)]="html" [(text)]="text" [disabled]="locked()" /></section>
+      <section class="campus-panel broadcast-targets"><h2>1. 發布對象</h2><app-class-selector [classes]="classes()" [(selected)]="selected" [disabled]="locked()" /></section>
+      <section class="campus-panel broadcast-compose"><h2>2. 廣播內容</h2><app-rich-editor [(html)]="html" [(text)]="text" [disabled]="locked()" /></section>
       @if (html().length > 19970) { <p role="alert">內容過長，請縮短通知後發布（包含文字格式最多 19,970 字元）。</p> }
       @if (error() && !modalOpen()) { <p role="alert">{{ error() }}</p> }
       <button class="primary" type="button" [disabled]="loading() || !!loadError() || locked() || !selected().size || !text().trim() || html().length > 19970" (click)="review()">發布廣播</button>
-      <dialog #dialog aria-labelledby="review-title" (cancel)="cancel($event)" (close)="modalOpen.set(false)">
+      <dialog class="broadcast-confirmation" #dialog aria-labelledby="review-title" (cancel)="cancel($event)" (close)="modalOpen.set(false)">
         <h2 id="review-title">確認發布廣播</h2>
         <app-rich-content [content]="prefix + snapshot.content" />
         <h3>發布對象 · 共 {{ snapshot.target_group_ids.length }} 個班級</h3>
