@@ -1,0 +1,75 @@
+/**
+ * @id midnight.campus
+ * @name Midnight Campus
+ * @description 深色玻璃風格、卡片布局與輕柔動畫；Day 27 可獨立修改此檔案。
+ * @version 1.0.0
+ * @author Campus Theme Authors
+ */
+:root {
+  color-scheme: dark;
+  --campus-background: #0c1222;
+  --campus-surface: #18223b;
+  --campus-surface-alt: #243252;
+  --campus-text: #ecf0ff;
+  --campus-muted: #bec9ec;
+  --campus-border: #526088;
+  --campus-accent: #a6a7ff;
+  --campus-on-accent: #10172b;
+  --campus-hover: #303f65;
+  --campus-danger: #ffa5ac;
+  --campus-warning: #ffd698;
+  --campus-radius: 18px;
+  --campus-font: system-ui, sans-serif;
+}
+.campus-page { background: var(--campus-background); }
+.login-card {
+  border-radius: 28px;
+  overflow: hidden;
+  border: 1px solid var(--campus-accent);
+  background: linear-gradient(135deg, #253659, #151f37);
+  box-shadow: 0 20px 70px #0006;
+  animation: campus-arrive 450ms ease;
+}
+.login-branding { background: linear-gradient(160deg, #454782, #202d52); }
+.campus-panel:not(.login-card), .broadcast-card, .theme-card {
+  border-radius: 18px;
+  box-shadow: 0 10px 30px #0003;
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+.broadcast-card:hover, .theme-card:hover { transform: translateY(-2px); box-shadow: 0 16px 38px #0005; }
+.campus-nav { border-bottom-color: var(--campus-accent); gap: 1.5rem; }
+.broadcast-progress { height: 14px; accent-color: var(--campus-accent); }
+.rich, .editor { letter-spacing: .02em; }
+.theme-settings .theme-list { grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); }
+@media (min-width: 900px) {
+  .campus-student-broadcasts .feed-table, .campus-student-broadcasts tbody { display: block; }
+  .campus-student-broadcasts colgroup, .campus-student-broadcasts thead { display: none; }
+  .campus-student-broadcasts .date-row, .campus-student-broadcasts .date-row th { display: block; }
+  .campus-student-broadcasts .broadcast-card {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas: 'sender time' 'content content' 'confirmation reply';
+    gap: 1rem;
+    padding: 1.5rem;
+    margin: 1rem 0;
+    background: var(--campus-surface);
+    border: 1px solid var(--campus-border);
+  }
+  .broadcast-card td { display: block; min-width: 0; padding: 0; border: 0; }
+  .broadcast-card .sender { grid-area: sender; }
+  .broadcast-card .sent-time { grid-area: time; }
+  .broadcast-card .content { grid-area: content; }
+  .broadcast-card .confirmation { grid-area: confirmation; }
+  .broadcast-card .reply-entry { grid-area: reply; }
+  .campus-student-broadcasts .reply-row, .campus-student-broadcasts .reply-row td { display: block; }
+  .campus-student-broadcasts .reply-row[hidden] { display: none; }
+  .campus-student-broadcasts .reply-row section { margin-left: 0; }
+}
+@media (max-width: 600px) {
+  .campus-page { padding: 1rem .75rem 5rem; }
+  .login-card { border-radius: 18px; }
+}
+@keyframes campus-arrive {
+  from { opacity: .3; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
