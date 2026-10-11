@@ -1,6 +1,6 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, switchMap, tap } from 'rxjs';
+import { Observable, catchError, of, switchMap, tap, throwError } from 'rxjs';
 
 export type AccountType = 'student' | 'teacher';
 
@@ -27,11 +27,20 @@ interface LoginRequest {
 export class AuthService {
   private readonly http = inject(HttpClient);
   readonly identityRevision = signal(0);
+  readonly profile = signal<AccountProfile | null>(null);
+
+  clearIdentity(): void {
+    this.profile.set(null);
+    this.identityRevision.update((value) => value + 1);
+  }
 
   logout(): Observable<void> {
     return this.http
       .post<void>('/auth/logout', {}, { withCredentials: true })
-      .pipe(tap(() => this.identityRevision.update((value) => value + 1)));
+      .pipe(
+        catchError(error => error.status === 401 ? of(undefined) : throwError(() => error)),
+        tap(() => this.clearIdentity()),
+      );
   }
 
   login(request: LoginRequest): Observable<AccountProfile> {
@@ -42,6 +51,12 @@ export class AuthService {
   }
 
   me(): Observable<AccountProfile> {
-    return this.http.get<AccountProfile>('/auth/me', { withCredentials: true });
+    return this.http.get<AccountProfile>('/auth/me', { withCredentials: true }).pipe(
+      tap(profile => this.profile.set(profile)),
+      catchError(error => {
+        if (error.status === 401 || error.status === 403) this.clearIdentity();
+        return throwError(() => error);
+      }),
+    );
   }
 }

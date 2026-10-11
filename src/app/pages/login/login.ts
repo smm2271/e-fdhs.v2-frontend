@@ -1,6 +1,6 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 
 @Component({
@@ -11,6 +11,8 @@ import { AuthService } from '../../services/auth.service';
 })
 export class Login {
   private readonly auth = inject(AuthService);
+  private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
   protected role = signal<'teacher' | 'student'>('student');
   protected account = '';
   protected positionName = '';
@@ -39,6 +41,14 @@ export class Login {
         this.role.set(profile.account_type);
         this.welcomeName.set(profile.display_name?.trim() || profile.account);
         this.isSubmitting.set(false);
+        this.password = '';
+        const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
+        void this.router.navigateByUrl(
+          returnUrl?.startsWith('/') && !returnUrl.startsWith('//')
+            && this.router.parseUrl(returnUrl).root.children['primary']?.segments[0]?.path !== undefined
+            ? returnUrl : '/broadcasts',
+          { replaceUrl: true },
+        );
       },
       error: (error: { status?: number }) => {
         this.errorMessage.set(error.status === 401 || error.status === 403

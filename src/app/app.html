@@ -1,5 +1,9 @@
 <div id="campus-theme-root" class="campus-app" data-campus-theme-root><router-outlet /></div>
 <nav class="campus-theme-recovery" aria-label="外觀與安全恢復">
+  @if (auth.profile()) {
+    <button type="button" (click)="logout()" [disabled]="loggingOut()">{{ loggingOut() ? '登出中…' : '登出' }}</button>
+  }
+  @if (logoutError()) { <span role="alert">{{ logoutError() }}</span> }
   <a routerLink="/settings/themes">外觀設定</a>
   <a href="/settings/themes?theme-safe=1">主題安全模式</a>
 </nav>
